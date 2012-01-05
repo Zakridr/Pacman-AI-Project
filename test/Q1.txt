@@ -1,0 +1,3 @@
+python pacman.py -q -l tinyMaze -p SearchAgent
+python pacman.py -q -l mediumMaze -p SearchAgent
+python pacman.py -q -l bigMaze -z .5 -p SearchAgent

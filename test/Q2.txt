@@ -1,0 +1,5 @@
+python pacman.py -q -l tinyMaze -p SearchAgent
+python pacman.py -q -l mediumMaze -p SearchAgent
+python pacman.py -q -l bigMaze -z .5 -p SearchAgent
+python pacman.py -q -l mediumMaze -p SearchAgent -a fn=bfs
+python pacman.py -q -l bigMaze -p SearchAgent -a fn=bfs -z .5

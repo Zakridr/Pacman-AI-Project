@@ -1,0 +1,4 @@
+aaaaA
+bb
+cost of 10
+nodes expanded: 11

@@ -1,0 +1,157 @@
+# Helper functions ***
+  def getFoodGrid (state):
+      return state[1]
+  
+  def getFoodList(state):
+      return getFoodGrid(state).asList()
+
+  def mnhttn_dst( pos1, pos2):
+      x1,y1 = pos1
+      x2, y2 = pos2
+      return abs(x1 - x2) + abs(y1 - y2)
+
+  def getCurrentPosition(state):
+      return state[0]
+
+  def getFoodCoord(food_index):
+      return problem.heuristicInfo[food_index]
+
+  def getDistance(food_index1, food_index2):
+      return problem.heuristicInfo[DISTANCES][food_index1][food_index2]
+# end helper functions ***
+
+  def isFirstRun():
+      """Tells us whether this is the first time heuristic has been called or
+      not"""
+      return not (DISTANCES in problem.heuristicInfo)
+
+  def initialize():
+      """Set up the distances matrix, store in problem.heuristicInfo"""
+      points = []
+      foodList = getFoodList(state)
+      j = 0
+      for pos in foodList:
+          points.append(pos)
+          problem.heuristicInfo[j] = pos
+          problem.heuristicInfo[pos] = j
+
+          j += 1
+
+      distances = [ [ [] for i in foodList] for j in foodList]
+
+      for i in range(len(foodList)):
+          for k in range(len(foodList)):
+              distances[i][k] = mnhttn_dst(foodList[i], foodList[k])
+      
+      problem.heuristicInfo[DISTANCES] = distances
+
+  def getFoodConfig(state):
+
+      fd_crd_lst = getFoodList(state)
+      
+      fd_indx_lst = []
+      for fd_crd in fd_crd_lst:
+          fd_indx_lst.append(problem.heuristicInfo[fd_crd])
+      
+      fd_indx_lst.sort()
+
+      return tuple(fd_indx_lst)
+
+  def genPaths(foodConfig):
+      """For a given food config, generates all the paths. Returns them in an
+      iterable thingy"""
+
+      from itertools import permutations
+
+      return permutations(foodConfig)
+
+  def getFoodPos(foodConfig, foodList):
+      """Takes in a food config..."""
+
+
+# These are the functions we run for every iteration
+  def isSeen(fd_cnfg):
+      """Returns boolean if we've seen this food config"""
+      return (fd_cnfg in problem.heuristicInfo)
+
+  def getPathCost(path):
+      """Takes in a raw path (w/o cost appended) and returns cost"""
+      cost = 0
+      for i in range(len(path) - 1):
+          cost += getDistance(path[i], path[i+1]) 
+
+      return cost
+
+  def getMinPathCost(state, fd_cnfg):
+      """Returns the min cost over all paths in cnfg_phts (need to add in
+      distance from crn_pstn to first food of cndf_pths)"""
+      current_position = getCurrentPosition(state)
+      min_cost = -1
+      food_perms = problem.heuristicInfo[fd_cnfg]
+      #print "In getMinPathCost"
+
+      for perm in food_perms:
+          cost = mnhttn_dst(getFoodCoord(perm[0]), current_position) + perm[1]
+          if min_cost == -1 or cost < min_cost:
+              min_cost = cost
+
+      return min_cost
+
+  def setConfigPaths(fd_cnfg):
+      """Takes in a food config, sets it appropriately in heuristicInfo, and
+      adds on something else..."""
+      perms = genPaths(fd_cnfg)
+      food_perms = []
+      print "Entered setConfigPaths"
+
+#   fd_index: (cost)
+      path_cost_dict = {}
+      for perm in perms:
+          cost = getPathCost(perm)
+#           new code
+          if (perm[0] not in path_cost_dict or cost < path_cost_dict[perm[0]]):
+              path_cost_dict[perm[0]] = cost
+
+
+      #food_perms.append( (perm[0], cost) )
+      for food_index in path_cost_dict:
+          food_perms.append( (food_index, path_cost_dict[food_index]) )
+      
+      print "Leaving setConfigPaths"
+#   end new code
+
+      problem.heuristicInfo[fd_cnfg] = food_perms
+
+  position, foodGrid = state
+
+  ##print "State is: "
+  ##print "  Current position: ", position
+  #print "  foodGrid: "
+  #print foodGrid
+  #print "End state description"
+
+  if isFirstRun():
+      #print "Initializing..."
+      initialize()
+
+  #print problem.heuristicInfo
+  fd_cnfg = getFoodConfig(state)
+  #print "Food configuration is: ", fd_cnfg
+  #for index in fd_cnfg:
+      #print "Food index ", index," is at position: ",
+      #print getFoodCoord(index)
+
+  if len(fd_cnfg) == 0:
+      #print "Found goal state"
+      return 0
+
+  if not isSeen(fd_cnfg):
+      #print "Setting up path configurations"
+      setConfigPaths(fd_cnfg)
+  
+#  cnfg_pths = getConfigPaths(fd_cnfg)
+  min_cost = getMinPathCost(state, fd_cnfg)
+  #print "Returning h cost: ", min_cost
+  #print ""
+  return min_cost
+
